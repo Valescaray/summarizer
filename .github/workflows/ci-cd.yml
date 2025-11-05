@@ -1,0 +1,161 @@
+name: Summarizer CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  BACKEND_REPO_NAME: summarizer-backend
+  FRONTEND_REPO_NAME: summarizer-frontend
+  BACKEND_PATH: ./Backend
+  FRONTEND_PATH: ./Summarizer_app
+  TERRAFORM_PATH: ./infra/terraform
+  ANSIBLE_PATH: ./infra/ansible
+
+jobs:
+  # ==========================================================
+  # 1️⃣ CI — Build & Push Docker Images to ECR
+  # ==========================================================
+  build_and_push:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          # aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          # aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Ensure ECR repositories exist
+        run: |
+          aws ecr describe-repositories --repository-names $BACKEND_REPO_NAME >/dev/null 2>&1 || \
+          aws ecr create-repository --repository-name $BACKEND_REPO_NAME --region $AWS_REGION
+
+          aws ecr describe-repositories --repository-names $FRONTEND_REPO_NAME >/dev/null 2>&1 || \
+          aws ecr create-repository --repository-name $FRONTEND_REPO_NAME --region $AWS_REGION
+
+      - name: Login to Amazon ECR
+        id: ecr
+        run: |
+          echo "Logging into ECR..."
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query 'Account' --output text).dkr.ecr.$AWS_REGION.amazonaws.com
+          echo "ECR login succeeded."
+
+      - name: Build and push backend image
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+          BACKEND_REPO_URL="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPO_NAME"
+          docker build -t $BACKEND_REPO_URL:latest $BACKEND_PATH
+          docker push $BACKEND_REPO_URL:latest
+          echo "BACKEND_REPO_URL=$BACKEND_REPO_URL" >> $GITHUB_ENV
+
+      - name: Build and push frontend image
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+          FRONTEND_REPO_URL="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPO_NAME"
+          docker build -t $FRONTEND_REPO_URL:latest $FRONTEND_PATH
+          docker push $FRONTEND_REPO_URL:latest
+          echo "FRONTEND_REPO_URL=$FRONTEND_REPO_URL" >> $GITHUB_ENV
+
+      - name: Write SSH public key to file
+        run: |
+          echo "${{ secrets.EC2_SSH_PUBLIC_KEY }}" > infra/terraform/summarizer-key.pub
+
+  # ==========================================================
+  # 2️⃣ INFRA — Terraform Apply (EC2, Security Group, etc)
+  # ==========================================================
+  terraform_apply:
+    name: Provision Infrastructure with Terraform
+    runs-on: ubuntu-latest
+    needs: build_and_push
+
+    defaults:
+      run:
+        working-directory: ${{ env.TERRAFORM_PATH }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region:
+            ${{ env.AWS_REGION }}
+            # aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            # aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            # aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Plan Terraform changes
+        run: terraform plan -out=tfplan
+
+      - name: Apply Terraform (auto-approve)
+        run: terraform apply -auto-approve tfplan
+
+      - name: Export EC2 IPs
+        id: output
+        run: |
+          BACKEND_IP=$(terraform output -raw backend_public_ip)
+          FRONTEND_IP=$(terraform output -raw frontend_public_ip)
+          echo "BACKEND_IP=$BACKEND_IP" >> $GITHUB_ENV
+          echo "FRONTEND_IP=$FRONTEND_IP" >> $GITHUB_ENV
+
+  # ==========================================================
+  # 3️⃣ CD — Deploy Using Ansible
+  # ==========================================================
+  ansible_deploy:
+    name: Deploy to EC2 with Ansible
+    runs-on: ubuntu-latest
+    needs: terraform_apply
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Ansible and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible boto3 botocore amazon.aws community.aws community.docker
+
+      - name: Write dynamic inventory file
+        run: |
+          echo "[backend]" > ${{ env.ANSIBLE_PATH }}/inventory.ini
+          echo "${{ env.BACKEND_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=/home/runner/.ssh/id_rsa" >> ${{ env.ANSIBLE_PATH }}/inventory.ini
+          echo "[frontend]" >> ${{ env.ANSIBLE_PATH }}/inventory.ini
+          echo "${{ env.FRONTEND_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=/home/runner/.ssh/id_rsa" >> ${{ env.ANSIBLE_PATH }}/inventory.ini
+
+      - name: Configure SSH Key for EC2
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Run Ansible playbook
+        run: |
+          ansible-playbook -i ${{ env.ANSIBLE_PATH }}/inventory.ini ${{ env.ANSIBLE_PATH }}/deploy.yml \
+            -e "aws_region=${{ env.AWS_REGION }} \
+                backend_repo_url=${{ env.BACKEND_REPO_URL }} \
+                frontend_repo_url=${{ env.FRONTEND_REPO_URL }}"

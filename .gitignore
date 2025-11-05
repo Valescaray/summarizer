@@ -45,3 +45,24 @@ build/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# === TERRAFORM ===
+# Local .terraform directories
+**/.terraform/*
+# Terraform state files
+*.tfstate
+*.tfstate.*
+# Crash logs
+crash.log
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+# Sensitive variable files
+*.tfvars
+*.tfvars.json
+# Provider and lock files
+.terraform.lock.hcl
+# Local plan output
+*.tfplan
