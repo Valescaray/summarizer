@@ -28,8 +28,8 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-    backend_repo_url: ${{ steps.backend.outputs.backend_repo_url }}
-    frontend_repo_url: ${{ steps.frontend.outputs.frontend_repo_url }}
+      backend_repo_url: ${{ steps.backend.outputs.backend_repo_url }}
+      frontend_repo_url: ${{ steps.frontend.outputs.frontend_repo_url }}
 
     steps:
       - name: Checkout repository
