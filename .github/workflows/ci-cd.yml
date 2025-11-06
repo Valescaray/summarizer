@@ -58,7 +58,7 @@ jobs:
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
           BACKEND_REPO_URL="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPO_NAME"
-          docker build -t $BACKEND_REPO_URL:latest $BACKEND_PATH
+          docker build -t $BACKEND_REPO_URL:latest -f ./Backend/Dockerfile ./Backend
           docker push $BACKEND_REPO_URL:latest
           echo "BACKEND_REPO_URL=$BACKEND_REPO_URL" >> $GITHUB_ENV
 
@@ -66,7 +66,7 @@ jobs:
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
           FRONTEND_REPO_URL="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPO_NAME"
-          docker build -t $FRONTEND_REPO_URL:latest $FRONTEND_PATH
+          docker build -t $BACKEND_REPO_URL:latest -f ./Summarizer_app/Dockerfile ./Summarizer_app
           docker push $FRONTEND_REPO_URL:latest
           echo "FRONTEND_REPO_URL=$FRONTEND_REPO_URL" >> $GITHUB_ENV
 
