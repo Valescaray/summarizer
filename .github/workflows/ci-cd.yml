@@ -16,8 +16,8 @@ env:
   FRONTEND_REPO_NAME: summarizer-frontend
   BACKEND_PATH: ./Backend1
   FRONTEND_PATH: ./Summarizer_app1
-  TERRAFORM_PATH: /infra/terraform
-  ANSIBLE_PATH: /infra/ansible
+  TERRAFORM_PATH: infra/terraform
+  ANSIBLE_PATH: infra/ansible
 
 jobs:
   # ==========================================================
@@ -157,12 +157,16 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Install Ansible and dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ansible boto3 botocore amazon.aws community.aws community.docker
+          pip install ansible boto3 botocore "amazon.aws<7" community.aws community.docker
+
+      - name: Ensure Ansible directory exists
+        run: |
+          mkdir -p ${{ env.ANSIBLE_PATH }}
 
       - name: Write dynamic inventory file
         run: |
