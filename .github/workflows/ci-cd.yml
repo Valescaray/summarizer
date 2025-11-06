@@ -16,8 +16,8 @@ env:
   FRONTEND_REPO_NAME: summarizer-frontend
   BACKEND_PATH: ./Backend1
   FRONTEND_PATH: ./Summarizer_app1
-  TERRAFORM_PATH: ./infra/terraform
-  ANSIBLE_PATH: ./infra/ansible
+  TERRAFORM_PATH: /infra/terraform
+  ANSIBLE_PATH: /infra/ansible
 
 jobs:
   # ==========================================================
@@ -75,6 +75,7 @@ jobs:
           mkdir -p infra/terraform
           echo "${{ secrets.EC2_SSH_PUBLIC_KEY }}" > infra/terraform/summarizer-key.pub
           echo "✅ SSH public key written to infra/terraform/summarizer-key.pub"
+          ls -l infra/terraform/
 
   # ==========================================================
   # 2️⃣ INFRA — Terraform Apply (EC2, Security Group, etc)
@@ -86,7 +87,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ${{ env.TERRAFORM_PATH }}
+        working-directory: infra/terraform
 
     steps:
       - name: Checkout repository
