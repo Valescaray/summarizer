@@ -207,3 +207,6 @@ jobs:
             -e "aws_region=${{ env.AWS_REGION }} \
                 backend_repo_url=${{ env.BACKEND_REPO_URL }} \
                 frontend_repo_url=${{ env.FRONTEND_REPO_URL }}"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
