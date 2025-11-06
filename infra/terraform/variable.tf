@@ -11,14 +11,7 @@ variable "public_subnet_cidr" {
   default = "10.0.1.0/24"
 }
 
-# variable "ssh_public_key_path" {
-#   type    = string
-#   default = "C:/Users/hp/Downloads/summarizer-key.pub"
 
-# }
-variable "ssh_public_key_path" {
-  default = "${path.module}/summarizer-key.pub"
-}
 
 variable "my_ip_cidr" {
   type    = string
