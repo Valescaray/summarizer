@@ -153,6 +153,7 @@ jobs:
     needs: terraform_apply
 
     env:
+      ANSIBLE_HOST_KEY_CHECKING: "False"
       BACKEND_IP: ${{ needs.terraform_apply.outputs.backend_ip }}
       FRONTEND_IP: ${{ needs.terraform_apply.outputs.frontend_ip }}
       AWS_REGION: us-east-1
@@ -194,6 +195,11 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+
+      - name: Add EC2 Hosts to known_hosts
+        run: |
+          ssh-keyscan -H $BACKEND_IP >> ~/.ssh/known_hosts
+          ssh-keyscan -H $FRONTEND_IP >> ~/.ssh/known_hosts
 
       - name: Run Ansible playbook
         run: |
