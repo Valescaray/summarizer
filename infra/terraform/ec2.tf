@@ -12,12 +12,9 @@ data "aws_iam_role" "summarizer_ec2_role" {
   name = "summarizer-ec2-role"
 }
 
-
-
-# Create Instance Profile for EC2
-resource "aws_iam_instance_profile" "summarizer_profile" {
+# Reference existing IAM Instance Profile
+data "aws_iam_instance_profile" "summarizer_profile" {
   name = "summarizer-ec2-profile"
-  role = aws_iam_role.summarizer_ec2_role.name
 }
 
 resource "aws_instance" "frontend" {
@@ -28,11 +25,13 @@ resource "aws_instance" "frontend" {
   key_name               = aws_key_pair.deployer.key_name
   associate_public_ip_address = true
 
-  iam_instance_profile    = aws_iam_instance_profile.summarizer_profile.name
+  iam_instance_profile    = data.summarizer_profile.name
 
   tags = { Name = "summarizer-frontend" }
 }
 
+
+# Backend EC2
 resource "aws_instance" "backend" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.backend_instance_type
@@ -41,12 +40,10 @@ resource "aws_instance" "backend" {
   key_name               = aws_key_pair.deployer.key_name
   associate_public_ip_address = true
 
-  iam_instance_profile    = aws_iam_instance_profile.summarizer_profile.name
+  iam_instance_profile    = data.aws_iam_instance_profile.summarizer_profile.name
 
   tags = { Name = "summarizer-backend" }
 }
-
-
 
 # # Frontend EC2
 # resource "aws_instance" "frontend" {
