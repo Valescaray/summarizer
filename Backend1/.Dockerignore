@@ -1,0 +1,16 @@
+# local files not to include in image
+
+.env
+.vscode/
+**pycache**/
+_.pyc
+_.pyo
+\*.pyd
+.Python
+env/
+venv/
+node_modules/
+.git
+.gitignore
+tests/
+docker-compose.yml
