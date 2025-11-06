@@ -6,6 +6,10 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  id-token: write # Required for OIDC federation to AWS
+  contents: read # Allows checkout and basic repo read access
+
 env:
   AWS_REGION: us-east-1
   BACKEND_REPO_NAME: summarizer-backend
