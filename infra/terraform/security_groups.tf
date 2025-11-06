@@ -20,7 +20,7 @@ resource "aws_security_group" "frontend_sg" {
     from_port = 22
     to_port   = 22
     protocol  = "tcp"
-    cidr_blocks = [var.my_ip_cidr]
+    cidr_blocks = ["0.0.0.0/0"]
   }
   egress { 
     from_port=0
@@ -48,7 +48,7 @@ resource "aws_security_group" "backend_sg" {
     from_port = 22
     to_port   = 22
     protocol  = "tcp"
-    cidr_blocks = [var.my_ip_cidr]
+    cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
      from_port=0
