@@ -95,6 +95,10 @@ jobs:
       run:
         working-directory: infra/terraform
 
+    outputs:
+      backend_ip: ${{ steps.output.outputs.backend_ip }}
+      frontend_ip: ${{ steps.output.outputs.frontend_ip }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -137,10 +141,8 @@ jobs:
       - name: Export EC2 IPs
         id: output
         run: |
-          BACKEND_IP=$(terraform output -raw backend_public_ip)
-          FRONTEND_IP=$(terraform output -raw frontend_public_ip)
-          echo "BACKEND_IP=$BACKEND_IP" >> $GITHUB_ENV
-          echo "FRONTEND_IP=$FRONTEND_IP" >> $GITHUB_ENV
+          echo "backend_ip=$(terraform output -raw backend_public_ip)" >> $GITHUB_OUTPUT
+          echo "frontend_ip=$(terraform output -raw frontend_public_ip)" >> $GITHUB_OUTPUT
 
   # ==========================================================
   # 3️⃣ CD — Deploy Using Ansible
@@ -149,6 +151,17 @@ jobs:
     name: Deploy to EC2 with Ansible
     runs-on: ubuntu-latest
     needs: terraform_apply
+
+    env:
+      BACKEND_IP: ${{ needs.terraform_apply.outputs.backend_ip }}
+      FRONTEND_IP: ${{ needs.terraform_apply.outputs.frontend_ip }}
+      AWS_REGION: us-east-1
+      BACKEND_REPO_NAME: summarizer-backend
+      FRONTEND_REPO_NAME: summarizer-frontend
+      BACKEND_PATH: ./Backend1
+      FRONTEND_PATH: ./Summarizer_app1
+      TERRAFORM_PATH: ./infra/terraform
+      ANSIBLE_PATH: ./infra/ansible
 
     steps:
       - name: Checkout repository
