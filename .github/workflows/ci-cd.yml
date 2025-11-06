@@ -27,6 +27,10 @@ jobs:
     name: Build & Push Docker Images
     runs-on: ubuntu-latest
 
+    outputs:
+    backend_repo_url: ${{ steps.backend.outputs.backend_repo_url }}
+    frontend_repo_url: ${{ steps.frontend.outputs.frontend_repo_url }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -60,7 +64,7 @@ jobs:
           BACKEND_REPO_URL="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPO_NAME"
           docker build -t $BACKEND_REPO_URL:latest -f ./Backend1/Dockerfile ./Backend1
           docker push $BACKEND_REPO_URL:latest
-          echo "BACKEND_REPO_URL=$BACKEND_REPO_URL" >> $GITHUB_ENV
+          echo "backend_repo_url=$BACKEND_REPO_URL" >> $GITHUB_ENV
 
       - name: Build and push frontend image
         run: |
@@ -68,7 +72,7 @@ jobs:
           FRONTEND_REPO_URL="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPO_NAME"
           docker build -t $FRONTEND_REPO_URL:latest -f ./Summarizer_app1/Dockerfile ./Summarizer_app1
           docker push $FRONTEND_REPO_URL:latest
-          echo "FRONTEND_REPO_URL=$FRONTEND_REPO_URL" >> $GITHUB_ENV
+          echo "frontend_repo_url=$FRONTEND_REPO_URL" >> $GITHUB_ENV
 
       - name: Write SSH public key to file
         run: |
@@ -163,6 +167,8 @@ jobs:
       FRONTEND_PATH: ./Summarizer_app1
       TERRAFORM_PATH: ./infra/terraform
       ANSIBLE_PATH: ./infra/ansible
+      BACKEND_REPO_URL: ${{ needs.build_and_push.outputs.backend_repo_url }}
+      FRONTEND_REPO_URL: ${{ needs.build_and_push.outputs.frontend_repo_url }}
 
     steps:
       - name: Checkout repository
