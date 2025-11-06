@@ -72,7 +72,9 @@ jobs:
 
       - name: Write SSH public key to file
         run: |
+          mkdir -p infra/terraform
           echo "${{ secrets.EC2_SSH_PUBLIC_KEY }}" > infra/terraform/summarizer-key.pub
+          echo "✅ SSH public key written to infra/terraform/summarizer-key.pub"
 
   # ==========================================================
   # 2️⃣ INFRA — Terraform Apply (EC2, Security Group, etc)
@@ -104,6 +106,11 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.9.8
+
+      - name: Verify key file
+        run: |
+          ls -l infra/terraform/
+          cat infra/terraform/summarizer-key.pub | head -c 50
 
       - name: Initialize Terraform
         run: terraform init
