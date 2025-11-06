@@ -66,7 +66,7 @@ jobs:
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
           FRONTEND_REPO_URL="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPO_NAME"
-          docker build -t $BACKEND_REPO_URL:latest -f ./Summarizer_app1/Dockerfile ./Summarizer_app1
+          docker build -t $FRONTEND_REPO_URL:latest -f ./Summarizer_app1/Dockerfile ./Summarizer_app1
           docker push $FRONTEND_REPO_URL:latest
           echo "FRONTEND_REPO_URL=$FRONTEND_REPO_URL" >> $GITHUB_ENV
 
