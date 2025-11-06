@@ -77,6 +77,12 @@ jobs:
           echo "✅ SSH public key written to infra/terraform/summarizer-key.pub"
           ls -l infra/terraform/
 
+      - name: Upload SSH public key as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssh-key
+          path: infra/terraform/summarizer-key.pub
+
   # ==========================================================
   # 2️⃣ INFRA — Terraform Apply (EC2, Security Group, etc)
   # ==========================================================
@@ -92,6 +98,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Download SSH public key
+        uses: actions/download-artifact@v4
+        with:
+          name: ssh-key
+          path: infra/terraform
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -110,8 +122,8 @@ jobs:
 
       - name: Verify key file
         run: |
-          ls -l infra/terraform/
-          cat infra/terraform/summarizer-key.pub | head -c 50
+          ls -l 
+          cat summarizer-key.pub | head -c 50
 
       - name: Initialize Terraform
         run: terraform init
