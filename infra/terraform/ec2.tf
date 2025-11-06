@@ -7,29 +7,12 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-# IAM Role for EC2 to access ECR
-resource "aws_iam_role" "summarizer_ec2_role" {
+# Reference existing IAM Role
+data "aws_iam_role" "summarizer_ec2_role" {
   name = "summarizer-ec2-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
 }
 
-# Attach ECR Read-Only Access to the Role
-resource "aws_iam_role_policy_attachment" "ecr_read_access" {
-  role       = aws_iam_role.summarizer_ec2_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-}
+
 
 # Create Instance Profile for EC2
 resource "aws_iam_instance_profile" "summarizer_profile" {
