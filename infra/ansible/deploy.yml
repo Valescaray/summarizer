@@ -35,9 +35,9 @@
 
     - name: Display repository URLs
       debug:
-      msg:
-        - "Backend Repo URL: {{ backend_repo_url | default('Not provided') }}"
-        - "Frontend Repo URL: {{ frontend_repo_url | default('Not provided') }}"
+        msg:
+          - "Backend Repo URL: {{ backend_repo_url | default('Not provided') }}"
+          - "Frontend Repo URL: {{ frontend_repo_url | default('Not provided') }}"
 
     - name: Authenticate Docker with AWS ECR
       shell: |
