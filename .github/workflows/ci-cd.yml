@@ -64,7 +64,7 @@ jobs:
           BACKEND_REPO_URL="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPO_NAME"
           docker build -t $BACKEND_REPO_URL:latest -f ./Backend1/Dockerfile ./Backend1
           docker push $BACKEND_REPO_URL:latest
-          echo "backend_repo_url=$BACKEND_REPO_URL" >> $GITHUB_ENV
+          echo "backend_repo_url=$BACKEND_REPO_URL" >> $GITHUB_OUTPUT
 
       - name: Build and push frontend image
         run: |
@@ -72,8 +72,7 @@ jobs:
           FRONTEND_REPO_URL="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPO_NAME"
           docker build -t $FRONTEND_REPO_URL:latest -f ./Summarizer_app1/Dockerfile ./Summarizer_app1
           docker push $FRONTEND_REPO_URL:latest
-          echo "frontend_repo_url=$FRONTEND_REPO_URL" >> $GITHUB_ENV
-
+          echo "frontend_repo_url=$FRONTEND_REPO_URL" >> $GITHUB_OUTPUT
       - name: Write SSH public key to file
         run: |
           mkdir -p infra/terraform
@@ -206,6 +205,11 @@ jobs:
         run: |
           ssh-keyscan -H $BACKEND_IP >> ~/.ssh/known_hosts
           ssh-keyscan -H $FRONTEND_IP >> ~/.ssh/known_hosts
+
+      - name: Show repo URLs
+        run: |
+          echo "Backend: ${{ needs.build_and_push.outputs.backend_repo_url }}"
+          echo "Frontend: ${{ needs.build_and_push.outputs.frontend_repo_url }}"
 
       - name: Run Ansible playbook
         run: |
