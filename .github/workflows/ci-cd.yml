@@ -59,6 +59,7 @@ jobs:
           echo "ECR login succeeded."
 
       - name: Build and push backend image
+        id: backend
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
           BACKEND_REPO_URL="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPO_NAME"
@@ -67,12 +68,14 @@ jobs:
           echo "backend_repo_url=$BACKEND_REPO_URL" >> $GITHUB_OUTPUT
 
       - name: Build and push frontend image
+        id: frontend
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
           FRONTEND_REPO_URL="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPO_NAME"
           docker build -t $FRONTEND_REPO_URL:latest -f ./Summarizer_app1/Dockerfile ./Summarizer_app1
           docker push $FRONTEND_REPO_URL:latest
           echo "frontend_repo_url=$FRONTEND_REPO_URL" >> $GITHUB_OUTPUT
+
       - name: Write SSH public key to file
         run: |
           mkdir -p infra/terraform
@@ -153,7 +156,7 @@ jobs:
   ansible_deploy:
     name: Deploy to EC2 with Ansible
     runs-on: ubuntu-latest
-    needs: terraform_apply
+    needs: [build_and_push, terraform_apply]
 
     env:
       ANSIBLE_HOST_KEY_CHECKING: "False"
