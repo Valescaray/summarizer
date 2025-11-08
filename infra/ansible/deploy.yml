@@ -2,8 +2,7 @@
 - name: Deploy Summarizer Backend and Frontend from ECR
   hosts: all
   become: true
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
+
   # hosts: localhost
   # connection: local
   # gather_facts: false
@@ -15,6 +14,7 @@
     backend_container: "summarizer-backend"
     frontend_container: "summarizer-frontend"
     app_network: "summarizer_net"
+    ansible_python_interpreter: /usr/bin/python3
 
   tasks:
     - name: Update apt cache
