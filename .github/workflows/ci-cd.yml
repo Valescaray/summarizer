@@ -171,6 +171,7 @@ jobs:
       ANSIBLE_PATH: ./infra/ansible
       BACKEND_REPO_URL: ${{ needs.build_and_push.outputs.backend_repo_url }}
       FRONTEND_REPO_URL: ${{ needs.build_and_push.outputs.frontend_repo_url }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
 
     steps:
       - name: Checkout repository
@@ -223,3 +224,4 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
