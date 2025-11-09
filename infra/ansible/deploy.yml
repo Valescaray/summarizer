@@ -79,22 +79,30 @@
           - botocore
         executable: pip3
 
+    # - name: Fetch Google API key from Secrets Manager
+    #   community.aws.secretsmanager_secret:
+    #     name: summarizer_backend_env
+    #     region: "{{ aws_region }}"
+    #   register: backend_secret
+    #   environment:
+    #     AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
+    #     AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+    #     AWS_DEFAULT_REGION: "{{ aws_region | default('us-east-1') }}"
+    #   # when: not ansible_check_mode
+
     - name: Fetch Google API key from Secrets Manager
-      community.aws.secretsmanager_secret:
-        name: summarizer_backend_env
-        region: "{{ aws_region }}"
-      register: backend_secret
+      set_fact:
+        google_api_secret: "{{ lookup('amazon.aws.aws_secret', 'summarizer_backend_env', region=aws_region) | from_json }}"
       environment:
         AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
         AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
-        AWS_DEFAULT_REGION: "{{ aws_region | default('us-east-1') }}"
-      # when: not ansible_check_mode
+        AWS_DEFAULT_REGION: "{{ aws_region }}"
 
     - name: Write backend env file
       copy:
         dest: /opt/summarizer/backend.env
         content: |
-          GOOGLE_API_KEY={{ backend_secret.value.GOOGLE_API_KEY }}
+          GOOGLE_API_KEY={{ google_api_secret.GOOGLE_API_KEY }}
         mode: "0600"
 
     - name: Generate frontend env file
