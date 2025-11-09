@@ -26,8 +26,22 @@
         name:
           - docker.io
           - python3-pip
-          - awscli
         state: present
+
+    - name: Install and verify AWS CLI v2
+      become: true
+      shell: |
+        set -e
+        apt-get update -y && apt-get install -y unzip curl
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+        unzip -o /tmp/awscliv2.zip -d /tmp
+        /tmp/aws/install --update
+        aws --version
+      register: aws_cli_version
+      changed_when: false
+
+    - debug:
+        msg: "✅ Installed AWS CLI version: {{ aws_cli_version.stdout }}"
 
     - name: Ensure Docker is started
       service:
