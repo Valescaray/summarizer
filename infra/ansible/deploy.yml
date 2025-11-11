@@ -117,7 +117,7 @@
       copy:
         dest: /opt/summarizer/frontend.env
         content: |
-          VITE_APP_URL=http://{{ hostvars[groups['backend'][0]].ansible_host }}:8000
+          VITE_APP_URL=http://{{ hostvars[groups['backend'][0]].inventory_hostname }}:8000
         mode: "0644"
 
     - name: Show file content
