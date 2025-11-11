@@ -90,6 +90,12 @@
     #     AWS_DEFAULT_REGION: "{{ aws_region | default('us-east-1') }}"
     #   # when: not ansible_check_mode
 
+    - name: Ensure /opt/summarizer directory exists
+      file:
+        path: /opt/summarizer
+        state: directory
+        mode: "0755"
+
     - name: Fetch Google API key from Secrets Manager
       set_fact:
         google_api_secret:
