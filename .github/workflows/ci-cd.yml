@@ -3,7 +3,7 @@ name: Summarizer CI/CD Pipeline
 on:
   push:
     branches:
-      - dev
+      - main
   workflow_dispatch:
 
 permissions:
