@@ -32,7 +32,7 @@ resource "aws_security_group" "frontend_sg" {
   tags = { Name = "frontend-sg" }
 }
 
-# Backend SG: app port only allowed from frontend SG (recommended) and SSH from your IP
+# Backend SG: App port from anywhere, SSH from anywhere
 resource "aws_security_group" "backend_sg" {
   name   = "summarizer-backend-sg"
   vpc_id = aws_vpc.main.id
@@ -42,7 +42,7 @@ resource "aws_security_group" "backend_sg" {
     from_port = var.backend_app_port
     to_port   = var.backend_app_port
     protocol  = "tcp"
-    security_groups = [aws_security_group.frontend_sg.id] # allow only frontend-to-backend
+    cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
     from_port = 22

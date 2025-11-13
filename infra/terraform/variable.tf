@@ -12,10 +12,9 @@ variable "public_subnet_cidr" {
 }
 
 
-
 variable "my_ip_cidr" {
   type    = string
-  default = "105.112.222.215/32" # replace with your IP
+  default = "105.112.222.215/32" 
 }
 variable "frontend_instance_type" {
   type    = string
