@@ -11,7 +11,7 @@ permissions:
   contents: read # Allows checkout and basic repo read access
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: us-west-2
   BACKEND_REPO_NAME: summarizer-backend
   FRONTEND_REPO_NAME: summarizer-frontend
   BACKEND_PATH: ./Backend1
@@ -162,7 +162,7 @@ jobs:
       ANSIBLE_HOST_KEY_CHECKING: "False"
       BACKEND_IP: ${{ needs.terraform_apply.outputs.backend_ip }}
       FRONTEND_IP: ${{ needs.terraform_apply.outputs.frontend_ip }}
-      AWS_REGION: us-east-1
+      AWS_REGION: us-west-2
       BACKEND_REPO_NAME: summarizer-backend
       FRONTEND_REPO_NAME: summarizer-frontend
       BACKEND_PATH: ./Backend1
